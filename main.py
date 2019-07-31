@@ -26,17 +26,11 @@ def parse_args():
     return args
 
 
-def gen_graph(arg):
-    x, r = arg
-    graphs = []
-    times = []
-    for i in range(r):
-        start_time = dati.now()
-        g = nx.internet_as_graph(x)
-        graphs.append(g)
-        end_time = dati.now()
-        times.append((end_time-start_time).total_seconds())
-    return x, times, graphs
+def gen_graph(x):
+    start_time = dati.now()
+    g = nx.internet_as_graph(x)
+    end_time = dati.now()
+    return x, g, (end_time-start_time).total_seconds()
 
 
 def print_res(times):
@@ -52,16 +46,16 @@ def print_res(times):
 
 
 args = parse_args()
-times = dict()
-graphs = dict()
+times = defaultdict(list)
+graphs = defaultdict(list)
 
-args_list = [[x, args.r] for x in
-             range(args.s, args.e+1, args.d)]
+arg_list = []
+for x in range(args.s, args.e+1, args.d):
+    arg_list += [x]*args.r
 pool = Pool(args.p)
-for x, t, g in pool.imap_unordered(gen_graph, args_list):
-    print(x,t,g)
-    times[x] = t
-    graphs[x] = g
+for x, g, t in pool.imap_unordered(gen_graph, arg_list):
+    times[x].append(t)
+    graphs[x].append(g)
 
 print_res(times)
 
