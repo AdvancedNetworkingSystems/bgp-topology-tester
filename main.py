@@ -8,6 +8,7 @@ from collections import defaultdict
 import statistics
 from multiprocessing import Pool, Manager
 import random
+import sys
 
 
 def parse_args():
@@ -26,13 +27,16 @@ def parse_args():
 
 
 def gen_graph(arg):
-    x, r, t, gr = arg
+    x, r = arg
+    graphs = []
+    times = []
     for i in range(r):
         start_time = dati.now()
         g = nx.internet_as_graph(x)
-        gr[x].append(g)
+        graphs.append(g)
         end_time = dati.now()
-        t[x].append((end_time-start_time).total_seconds())
+        times.append((end_time-start_time).total_seconds())
+    return x, times, graphs
 
 
 def print_res(times):
@@ -48,22 +52,21 @@ def print_res(times):
 
 
 args = parse_args()
-m = Manager()
-times = m.dict()
-graphs = m.dict()
+times = dict()
+graphs = dict()
 
-for x in range(args.s, args.e+1, args.d):
-    times[x] = m.list()
-    graphs[x] = m.list()
- 
-args_list = [[x, args.r, times, graphs] for x in
+args_list = [[x, args.r] for x in
              range(args.s, args.e+1, args.d)]
 pool = Pool(args.p)
-pool.map(gen_graph, args_list)
+for x, t, g in pool.imap_unordered(gen_graph, args_list):
+    print(x,t,g)
+    times[x] = t
+    graphs[x] = g
+
 print_res(times)
 
 if args.S:
     for x in graphs:
-        for g in graphs[x]:
+        for idx, g in enumerate(graphs[x]):
             nx.write_graphml(g, "%s/internet-AS-graph-%d-%d.graphml" % (
-                args.S, x, int(random.random()*10000)))
+                args.S, x, idx))
