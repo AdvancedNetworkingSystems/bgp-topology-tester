@@ -18,8 +18,7 @@ The overall complexity of the generator is polynomial with the number of nodes.
 The following figure reports the time necessary to generate a graph with a growing number of nodes, as the average and standard deviation over 10 runs, and the best fit with a polynomial of degree 2.
 Code ran on an Intel Core i7-5500U CPU @ 2.40GHz, and memory usage was negligible (less than 2% of 8GB).
 
-
-<img src="images/generation-time.png" alt="drawing" width="800"/ style="text-align:center;">
+![Generation time](images/generation-time.png)
 
 All in all it takes roughly half an hour to generate a network with 10.000 nodes, which is reasonable, considering that the number of ASs on the Internet is in the order of 60k. Tests with larger networks are currently running and will be added in the future.
 
