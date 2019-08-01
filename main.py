@@ -47,6 +47,7 @@ def print_res(times, runs):
                   str(round(statistics.stdev(times[x]), 5)).ljust(padding),
                   human_r.ljust(padding))
             printed_res.add(x)
+    sys.stdout.flush()
 
 
 args = parse_args()
