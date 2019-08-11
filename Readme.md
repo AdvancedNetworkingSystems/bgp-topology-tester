@@ -20,7 +20,7 @@ Code ran on an Intel Core i7-5500U CPU @ 2.40GHz, and memory usage was negligibl
 
 ![Generation time](images/generation-time.png)
 
-All in all it takes roughly half an hour to generate a network with 10.000 nodes, which is reasonable, considering that the number of ASs on the Internet is in the order of 60k. Tests with larger networks are currently running and will be added in the future.
+All in all it takes a couple of minutes to generate a network with 1.000 nodes, half an hour for 10.000 nodes and 21 hours for a network with 50.000 which makes the generator usable, considering that the number of ASs on the Internet is in the order of [65k](http://www.cidr-report.org/as2.0/).
 
 ## Statistical properites
 
