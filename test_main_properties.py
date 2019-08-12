@@ -29,7 +29,7 @@ def generate_graph(nodes):
     filename = f"baseline-{nodes}.graphml"
     if not os.path.isfile(filename):
         G = bgp.internet_as_graph(nodes)
-        nx.write_graphml(G, filename)
+        #nx.write_graphml(G, filename)
     else:
         G = nx.read_graphml(filename)
     return (G, f"Baseline-{len(G.nodes())}")
@@ -60,9 +60,17 @@ def log_log_plot(d1, l1, d2, l2, filename):
     plt.savefig(filename)
 
 
-def degree_freqs(G):
+def degree_freqs(G, edge_type=''):
     x = []
-    degree_sequence = sorted([d for n, d in G.degree()], reverse=True)  
+    if edge_type and type(G) == nx.DiGraph:
+        degree_sequence = []
+        for n in G:
+            edges = list(G.in_edges(n, data=True)) + list(G.out_edges(n, data=True))
+            deg = len(list(filter(lambda x: x[2]['type'] == edge_type, edges)))
+            degree_sequence.append(deg)
+        degree_sequence.sort(reverse=True)
+    else:
+        degree_sequence = sorted([d for n, d in G.degree()], reverse=True)  
     M = degree_sequence[0]  # maximum
     degreeCount = collections.Counter(degree_sequence)
     for i in range(1, M+1):
@@ -114,7 +122,7 @@ def norm_avg_neigh_degree(G):
             for n in degree_look_up[d]:
                 n_avg = 0
                 n_neigh = 0
-                for neigh in nx.neighbors(G, n):
+                for neigh in nx.all_neighbors(G, n):
                     n_avg += node_degree[neigh]
                     n_neigh += 1
                 n_avg /= n_neigh
@@ -147,7 +155,6 @@ def power_law_analysis(G, Gname, H, Hname):
     df2 = degree_freqs(H)
     df1 = ccdf_from_freqs(df1)
     df2 = ccdf_from_freqs(df2)
-
     plt.figure()
     plt.xlabel("Node degree")
     plt.ylabel("CCDF")
@@ -177,7 +184,7 @@ def connectivity_analysis(G, Gname, H, Hname):
 def check_avg_path_length(G, target, eps):
     G2 = nx.Graph(G)  # we make it undirected
     pl = nx.average_shortest_path_length(G2)
-    if pl > target - eps and pls < target_eps:
+    if pl > target - eps and pl < target + eps:
         return True
     else:
         print(f"(PL={round(pl, 2)})", end='')
@@ -192,6 +199,27 @@ def print_failure():
     print("\033[1;31;40m[FAIL]\033[0m")
 
 
+def print_edge_type(G):
+    peer_edges = filter(lambda x: x[2]['type']=='peer',G.edges(data=True))
+    transit_edges = filter(lambda x: x[2]['type']=='transit',G.edges(data=True))
+    t_nodes = [n[0] for n in G.nodes(data=True) if n[1]['type'] == 'T']
+    m_nodes = [n[0] for n in G.nodes(data=True) if n[1]['type'] == 'M']
+    transit_edges_t = filter(lambda x: x[2]['type']=='transit' and (x[1] in t_nodes or x[0] in t_nodes),G.edges(data=True))
+    peer_edges_t = filter(lambda x: x[2]['type']=='peer' and (x[1] in t_nodes or x[0] in t_nodes),G.edges(data=True))
+    print('Peer edges:', len(list(peer_edges)))
+    print('Peer edges T:', len(list(peer_edges_t)))
+    print('Transit edges:', len(list(transit_edges)))
+    print('Transit edges T:', len(list(transit_edges_t)))
+    for d,n in sorted(list(G.degree()), key=lambda x:x[1])[-20:]:
+        t = 'C'
+        if d in t_nodes:
+            t = 'T'
+        elif d in m_nodes:
+            t = 'M'
+        print (t, n, end=' ')
+
+
+
 if __name__ == "__main__":
     print("Real-world graph retrieving...", end='')
     sys.stdout.flush()
@@ -201,6 +229,7 @@ if __name__ == "__main__":
     print("Baseline generation...", end='')
     sys.stdout.flush()
     G, Gname = generate_graph(len(H.nodes()))
+    #G, Gname = generate_graph(10000)
     print("[DONE]")
 
     print("Checking hierarchical structure...", end='')
